@@ -11,10 +11,13 @@ rand_hex() {
   printf "%04X%04X%04X" $((RANDOM)) $((RANDOM)) $((RANDOM))
 }
 
-gen_bin() {
+gen_bin_line() {
   local bin=""
-  for ((i=0; i<8; i++)); do
+  for ((i=0; i<32; i++)); do
     bin="$bin$((RANDOM % 2))"
+    if [ $((i % 8)) -eq 7 ] && [ $i -ne 31 ]; then
+      bin="$bin "
+    fi
   done
   echo "$bin"
 }
@@ -44,7 +47,7 @@ show_owner() {
   sleep 2
 }
 
-run_hack() {
+run_attack() {
   local type="$1"
   local target="$2"
 
@@ -53,7 +56,7 @@ run_hack() {
   sleep 0.3
   echo -e "${GREEN}[*] Target: ${RED}$target${NC}"
   sleep 0.3
-  echo -e "${GREEN}[*] Loading exploit modules...${NC}"
+  echo -e "${GREEN}[*] Loading attack modules...${NC}"
   progress "Loading" 20
 
   echo -e "${GREEN}[*] Scanning ports...${NC}"
@@ -85,18 +88,20 @@ run_hack() {
   progress "Root" 20
 
   echo -e "${GREEN}[+] ACCESS GRANTED${NC}"
-  echo -e "${GREEN}[+] $type hack completed on $target${NC}"
+  echo -e "${GREEN}[+] $type attack completed on $target${NC}"
   echo -e "${RED}DEADxEVIL${NC}"
   echo
   read -p "Press Enter to return to menu..."
 }
 
-run_cimage_dump() {
+run_cimage_attack() {
+  local target="$1"
+
   clear
-  echo -e "${GREEN}[*] Initializing DEADxEVIL cimage.in Dumper...${NC}"
-  sleep 0.5
-  echo -e "${GREEN}[*] Target Domain: cimage.in${NC}"
-  sleep 0.5
+  echo -e "${GREEN}[*] Initializing DEADxEVIL framework...${NC}"
+  sleep 0.3
+  echo -e "${GREEN}[*] Target: ${RED}$target${NC}"
+  sleep 0.3
   echo -e "${GREEN}[*] Resolving subdomains and mapping infrastructure...${NC}"
   sleep 1
 
@@ -161,10 +166,17 @@ run_cimage_dump() {
   progress "Dump" 30
   sleep 1
 
+  echo -e "${MAGENTA}Header: $(gen_bin_line)${NC}"
+  echo -e "${MAGENTA}Header: $(gen_bin_line)${NC}"
+  echo -e "${MAGENTA}Header: $(gen_bin_line)${NC}"
+  echo -e "${MAGENTA}Header: $(gen_bin_line)${NC}"
+  echo -e "${MAGENTA}Header: $(gen_bin_line)${NC}"
+  echo
+
   echo -e "${CYAN}================================================================${NC}"
   echo -e "${CYAN}                 cimage_dump.txt - STUDENT RECORDS              ${NC}"
   echo -e "${CYAN}================================================================${NC}"
-  echo -e "${MAGENTA}[*] BINARY     | ID       | NAME                  | EMAIL${NC}"
+  echo -e "${MAGENTA}[*] ID       | NAME                  | EMAIL${NC}"
   echo -e "${CYAN}----------------------------------------------------------------${NC}"
 
   local data=(
@@ -199,8 +211,8 @@ run_cimage_dump() {
 
   for record in "${data[@]}"; do
     IFS='|' read -r id name email <<< "$record"
-    printf "${MAGENTA}%s %s${NC} | ${YELLOW}%-8s${NC} | ${GREEN}%-22s${NC} | ${CYAN}%s${NC}\n" "$(gen_bin)" "$(gen_bin)" "$id" "$name" "$email"
-    sleep 0.1
+    printf "${YELLOW}%-8s${NC} | ${GREEN}%-22s${NC} | ${CYAN}%s${NC}\n" "$id" "$name" "$email"
+    sleep 0.05
   done
 
   echo -e "${CYAN}================================================================${NC}"
@@ -214,53 +226,53 @@ show_owner
 
 while true; do
   clear
-  echo -e "${RED}DEADxEVIL${NC} ${GREEN}Hacking Framework${NC}"
+  echo -e "${RED}DEADxEVIL${NC} ${GREEN}Attack Framework${NC}"
   echo -e "${GREEN}══════════════════════════════════════════════════════════${NC}"
-  echo -e "${GREEN}  [1] WiFi Network Hack${NC}"
-  echo -e "${GREEN}  [2] Android Device Hack${NC}"
-  echo -e "${GREEN}  [3] Facebook Account Hack${NC}"
-  echo -e "${GREEN}  [4] Instagram Account Hack${NC}"
-  echo -e "${GREEN}  [5] CCTV Camera Hack${NC}"
-  echo -e "${GREEN}  [6] Website Server Hack${NC}"
-  echo -e "${GREEN}  [7] Email Account Hack${NC}"
-  echo -e "${GREEN}  [8] CIMAGE Server Dump${NC}"
-  echo -e "${GREEN}  [9] Exit${NC}"
+  echo -e "${GREEN}  [1] WiFi Network Attack${NC}"
+  echo -e "${GREEN}  [2] Android Device Attack${NC}"
+  echo -e "${GREEN}  [3] Facebook Account Attack${NC}"
+  echo -e "${GREEN}  [4] Instagram Account Attack${NC}"
+  echo -e "${GREEN}  [5] CCTV Camera Attack${NC}"
+  echo -e "${GREEN}  [6] Website Server Attack${NC}"
+  echo -e "${GREEN}  [7] Email Account Attack${NC}"
+  echo -e "${GREEN}  [8] Exit${NC}"
   echo -e "${GREEN}══════════════════════════════════════════════════════════${NC}"
   read -p "DEADxEVIL@root:~# " choice
 
   case $choice in
     1)
       read -p "Enter WiFi SSID or BSSID: " target
-      run_hack "WiFi Network" "$target"
+      run_attack "WiFi Network" "$target"
       ;;
     2)
       read -p "Enter Android device IP or model: " target
-      run_hack "Android Device" "$target"
+      run_attack "Android Device" "$target"
       ;;
     3)
       read -p "Enter Facebook username/email: " target
-      run_hack "Facebook Account" "$target"
+      run_attack "Facebook Account" "$target"
       ;;
     4)
       read -p "Enter Instagram username: " target
-      run_hack "Instagram Account" "$target"
+      run_attack "Instagram Account" "$target"
       ;;
     5)
       read -p "Enter CCTV IP or camera ID: " target
-      run_hack "CCTV Camera" "$target"
+      run_attack "CCTV Camera" "$target"
       ;;
     6)
       read -p "Enter website URL or IP: " target
-      run_hack "Website Server" "$target"
+      if [[ "$target" == *"cimage.in"* ]]; then
+        run_cimage_attack "$target"
+      else
+        run_attack "Website Server" "$target"
+      fi
       ;;
     7)
       read -p "Enter email address: " target
-      run_hack "Email Account" "$target"
+      run_attack "Email Account" "$target"
       ;;
     8)
-      run_cimage_dump
-      ;;
-    9)
       clear
       echo -e "${GREEN}Exiting...${NC}"
       exit 0
